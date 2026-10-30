@@ -1,32 +1,65 @@
-# React + TypeScript + Vite
+# TickToTrade
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A free, browser-based game that teaches how high-frequency trading and market
+microstructure actually work. You act as a market maker on a live limit order
+book, competing against trading bots — each level teaches one concept through
+play rather than text.
 
-Currently, two official plugins are available:
+> **Educational simulation only.** No real money, no real brokerage, no real
+> market connectivity. Nothing here is financial advice.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Status
 
-## React Compiler
+Levels 1–3 of the 5-level MVP are playable:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **The order book** — place a limit order and watch it rest in the book.
+2. **Getting filled** — price-time priority and queue position.
+3. **Market making** — quote both sides, earn the spread, watch PnL and
+   inventory against bots running continuously in a Web Worker.
 
-## Expanding the Oxlint configuration
+Levels 4 ("Adverse selection") and 5 ("The latency race") are next — see
+[TODO.md](./TODO.md) for current progress and open questions, and
+[CLAUDE.md](./CLAUDE.md) for the full project spec and architecture decisions.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Getting started
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Then open the printed `localhost` URL. A level switcher at the top lets you
+jump between levels 1–3.
+
+## Scripts
+
+| Command            | What it does                                   |
+| ------------------- | ----------------------------------------------- |
+| `npm run dev`       | Start the Vite dev server with hot reload       |
+| `npm run build`     | Type-check and build a production bundle        |
+| `npm run preview`   | Preview the production build locally            |
+| `npm test`          | Run the Vitest suite (engine + level logic)     |
+| `npm run typecheck` | Type-check the whole project without emitting   |
+| `npm run lint`      | Run Oxlint                                      |
+
+## Tech stack
+
+TypeScript (strict), React, Vite, Tailwind CSS, Vitest. The simulation engine
+(`src/engine/`) is pure TypeScript with no DOM or React dependencies, and runs
+continuously in a Web Worker (`src/worker/`) for levels with bot activity.
+
+## Project structure
+
+```
+src/
+  engine/   Pure, deterministic simulation — order book, matching engine,
+            scheduler, latency model, bot strategies. No DOM, no React.
+  levels/   Level definitions: config, goals, bot rosters, PnL/scoring.
+  ui/       React components (OrderBookView, level pages, shared hooks).
+  worker/   Web Worker wrapper that drives bots against a running
+            Simulation without blocking the UI thread.
+```
+
+See CLAUDE.md's Architecture section for the full breakdown, including the
+"Time and event scheduling" decision record for how simulated time and
+latency are modeled.
